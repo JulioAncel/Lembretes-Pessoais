@@ -1,0 +1,18 @@
+[
+  {
+    "id": "0a896eb9-da2a-43d7-896b-9a3ed0ccedb9",
+    "name": "myadviser",
+    "website": "https://bi.myadviser.com.br/dashboard.aspx",
+    "interval_minutes": 1,
+    "start_time": "08:00",
+    "end_time": "21:00"
+  },
+  {
+    "id": "8f38f2dc-9788-458b-a148-a8ba974fc0e4",
+    "name": "laundry",
+    "website": "https://laundry.maxlocker.solutions/login",
+    "interval_minutes": 2,
+    "start_time": "08:00",
+    "end_time": "21:00"
+  }
+]
