@@ -219,6 +219,21 @@ def start_tray(root):
     threading.Thread(target=icon.run, daemon=True).start()
 
 # ---------------------------------------------------------------------------
+# Tema
+# ---------------------------------------------------------------------------
+
+T = {
+    "bg":      "#1e1e2e",
+    "bg2":     "#2a2a3e",
+    "entry":   "#2d2d44",
+    "border":  "#3d3d5c",
+    "accent":  "#7c6af7",
+    "danger":  "#f87171",
+    "fg":      "#e2e8f0",
+    "fg_dim":  "#94a3b8",
+}
+
+# ---------------------------------------------------------------------------
 # GUI
 # ---------------------------------------------------------------------------
 
@@ -235,6 +250,7 @@ class ReminderApp:
         self.root = root
         self.root.title("Notificador de Lembretes")
         self.root.resizable(False, False)
+        self.root.configure(bg=T["bg"])
         self.root.protocol("WM_DELETE_WINDOW", self.root.withdraw)
         self.root.bind("<Map>", lambda e: self.root.lift())
 
@@ -250,48 +266,46 @@ class ReminderApp:
         self._load_into_ui()
 
     def _build_ui(self):
-        hdr = tk.Frame(self.root, bg="#e8e8e8", pady=6)
+        hdr = tk.Frame(self.root, bg=T["bg2"], pady=8)
         hdr.pack(fill="x")
         tk.Label(hdr, text="Lembretes", font=("Segoe UI", 12, "bold"),
-                 bg="#e8e8e8").pack(side="left", padx=10)
+                 bg=T["bg2"], fg=T["fg"]).pack(side="left", padx=14)
 
-        outer = tk.Frame(self.root)
-        outer.pack(fill="both", expand=True, padx=10, pady=5)
+        self.inner = tk.Frame(self.root, bg=T["bg"])
+        self.inner.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.canvas = tk.Canvas(outer, width=620, height=320, highlightthickness=0)
-        sb = ttk.Scrollbar(outer, orient="vertical", command=self.canvas.yview)
-        self.inner = tk.Frame(self.canvas, bg="#f9f9f9")
-
-        self.inner.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        )
-        self.canvas.create_window((0, 0), window=self.inner, anchor="nw")
-        self.canvas.configure(yscrollcommand=sb.set)
-        self.canvas.pack(side="left", fill="both", expand=True)
-        sb.pack(side="right", fill="y")
-
-        # Header row (row 0) — same grid as the data rows
         for col, (text, w) in enumerate(_COLS):
             tk.Label(self.inner, text=text, font=("Segoe UI", 8, "bold"),
-                     bg="#f9f9f9", width=w, anchor="w"
-                     ).grid(row=0, column=col, padx=3, pady=(4, 2), sticky="w")
-        # empty headers for button columns
+                     bg=T["bg"], fg=T["fg_dim"], width=w, anchor="w"
+                     ).grid(row=0, column=col, padx=3, pady=(6, 3), sticky="w")
         for col in (5, 6):
-            tk.Label(self.inner, text="", bg="#f9f9f9").grid(row=0, column=col)
+            tk.Label(self.inner, text="", bg=T["bg"]).grid(row=0, column=col)
 
-        bottom = tk.Frame(self.root, pady=6)
-        bottom.pack(fill="x", padx=10)
-        tk.Button(bottom, text="+ Adicionar lembrete", command=self._add_row,
-                  font=("Segoe UI", 9)).pack(side="left")
+        bottom = tk.Frame(self.root, bg=T["bg"], pady=8)
+        bottom.pack(fill="x", padx=12)
+        tk.Button(bottom, text="＋  Adicionar lembrete",
+                  command=self._add_row,
+                  font=("Segoe UI", 9), bg=T["bg2"], fg=T["fg"],
+                  relief="flat", padx=12, cursor="hand2",
+                  activebackground="#3a3a5c", activeforeground=T["fg"]
+                  ).pack(side="left")
 
     def _add_row(self, reminder=None):
         rid = reminder["id"] if reminder else str(uuid.uuid4())
         r = self._next_row
         self._next_row += 1
 
-        widths = [w for _, w in _COLS]
-        entries = [tk.Entry(self.inner, width=w) for w in widths]
+        widths  = [w for _, w in _COLS]
+        entries = [
+            tk.Entry(self.inner, width=w,
+                     bg=T["entry"], fg=T["fg"],
+                     insertbackground=T["fg"],
+                     relief="flat",
+                     highlightthickness=1,
+                     highlightbackground=T["border"],
+                     highlightcolor=T["accent"])
+            for w in widths
+        ]
         e_name, e_website, e_interval, e_start, e_end = entries
 
         if reminder:
@@ -306,18 +320,22 @@ class ReminderApp:
             e_end.insert(0,      "18:00")
 
         for col, entry in enumerate(entries):
-            entry.grid(row=r, column=col, padx=3, pady=2, sticky="w")
+            entry.grid(row=r, column=col, padx=3, pady=3, ipady=3, sticky="w")
 
         btn_save = tk.Button(
             self.inner, text="Salvar", font=("Segoe UI", 8),
+            bg=T["accent"], fg="white", relief="flat", padx=8, cursor="hand2",
+            activebackground="#6a5ae0", activeforeground="white",
             command=lambda: self._save_row(rid, e_name, e_website, e_interval, e_start, e_end)
         )
         btn_del = tk.Button(
-            self.inner, text="Excluir", font=("Segoe UI", 8), fg="red",
+            self.inner, text="Excluir", font=("Segoe UI", 8),
+            bg=T["bg2"], fg=T["danger"], relief="flat", padx=8, cursor="hand2",
+            activebackground="#3a3a5c", activeforeground=T["danger"],
             command=lambda: self._delete_row(rid)
         )
-        btn_save.grid(row=r, column=5, padx=(6, 2), pady=2)
-        btn_del.grid(row=r, column=6, padx=2, pady=2)
+        btn_save.grid(row=r, column=5, padx=(8, 3), pady=3)
+        btn_del.grid(row=r, column=6, padx=3, pady=3)
 
         self.rows.append({
             "id": rid,
@@ -358,7 +376,7 @@ class ReminderApp:
         else:
             reminders.append(data)
         save_reminders(reminders)
-        messagebox.showinfo("Salvo", f"Lembrete '{name}' salvo.")
+        messagebox.showinfo("✓  Salvo", f"Lembrete '{name}' salvo.")
 
     def _delete_row(self, rid):
         if not messagebox.askyesno("Confirmar", "Excluir este lembrete?"):
